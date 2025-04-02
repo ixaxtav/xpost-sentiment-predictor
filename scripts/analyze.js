@@ -11,8 +11,18 @@ async function analyzeSentiment(texts) {
   const model = await use.load();
 
   const reference = {
-    positive: "I am feeling very happy and excited.",
-    negative: "I am so angry and disappointed.",
+    positive: [
+      "I love this so much.",
+      "This is amazing and wonderful.",
+      "I'm really happy with it.",
+      "I absolutely enjoyed it.",
+    ],
+    negative: [
+      "I hate this so much.",
+      "This is terrible and awful.",
+      "I'm really upset with it.",
+      "I absolutely hated it.",
+    ],
   };
 
   const allSentences = [...texts, reference.positive, reference.negative];
