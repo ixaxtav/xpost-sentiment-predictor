@@ -2,11 +2,13 @@ const tf = require("@tensorflow/tfjs-node");
 const use = require("@tensorflow-models/universal-sentence-encoder");
 const { cosineSimilarity } = require("../utils/similarity");
 
-const TEXTS = [
-  "I love this so much!",
-  "This is terrible and awful.",
-  "It's okay, I guess.",
-];
+const userInput = process.argv.slice(2).join(" ");
+
+if (!userInput) {
+  console.error("❗ Please enter a sentence to analyze:");
+  console.error('Example: node scripts/analyze.js "I love this app"');
+  process.exit(1);
+}
 
 const reference = {
   positive: [
@@ -27,55 +29,36 @@ function averageEmbedding(tensorGroup) {
   return tf.mean(tensorGroup, 0).reshape([1, -1]);
 }
 
-async function analyzeSentiment(texts) {
+async function analyzeSentiment(text) {
   const model = await use.load();
 
   const allReference = [...reference.positive, ...reference.negative];
-  const allSentences = [...texts, ...allReference];
+  const allSentences = [text, ...allReference];
   const embeddings = await model.embed(allSentences);
 
-  const inputEmbeddings = embeddings.slice([0, 0], [texts.length, -1]);
+  const inputEmbedding = embeddings.slice([0, 0], [1, -1]);
   const positiveEmbeddings = embeddings.slice(
-    [texts.length, 0],
+    [1, 0],
     [reference.positive.length, -1]
   );
   const negativeEmbeddings = embeddings.slice(
-    [texts.length + reference.positive.length, 0],
+    [1 + reference.positive.length, 0],
     [reference.negative.length, -1]
   );
 
   const posAvg = averageEmbedding(positiveEmbeddings);
   const negAvg = averageEmbedding(negativeEmbeddings);
 
-  const results = [];
+  const posScore = cosineSimilarity(inputEmbedding, posAvg);
+  const negScore = cosineSimilarity(inputEmbedding, negAvg);
 
-  for (let i = 0; i < texts.length; i++) {
-    const inputEmbedding = inputEmbeddings.slice([i, 0], [1, -1]);
+  let sentiment = "Neutral";
+  if (posScore - negScore > 0.1) sentiment = "Positive";
+  else if (negScore - posScore > 0.1) sentiment = "Negative";
 
-    const posScore = cosineSimilarity(inputEmbedding, posAvg);
-    const negScore = cosineSimilarity(inputEmbedding, negAvg);
-
-    let sentiment = "Neutral";
-    if (posScore - negScore > 0.1) sentiment = "Positive";
-    else if (negScore - posScore > 0.1) sentiment = "Negative";
-
-    results.push({
-      text: texts[i],
-      sentiment,
-      scores: {
-        pos: posScore.toFixed(3),
-        neg: negScore.toFixed(3),
-      },
-    });
-  }
-
-  return results;
+  console.log(`\n"${text}" ➜ ${sentiment}`);
+  console.log(`Positive Score: ${posScore.toFixed(3)}`);
+  console.log(`Negative Score: ${negScore.toFixed(3)}\n`);
 }
 
-analyzeSentiment(TEXTS).then((results) => {
-  results.forEach((r) => {
-    console.log(
-      `"${r.text}" ➜ ${r.sentiment} (pos: ${r.scores.pos}, neg: ${r.scores.neg})`
-    );
-  });
-});
+analyzeSentiment(userInput);
