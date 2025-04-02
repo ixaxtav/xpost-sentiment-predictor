@@ -1,4 +1,4 @@
-# X-Post Sentimental Analysis Predictor with TensorFlow.js
+# Text Sentimental Analysis Predictor with TensorFlow.js
 
 A lightweight Node.js script that analyzes the sentiment of a user-provided sentence using the Universal Sentence Encoder (USE) from TensorFlow.js. It compares the input to predefined positive, negative, and neutral reference sentences using cosine similarity.
 
@@ -30,8 +30,10 @@ A lightweight Node.js script that analyzes the sentiment of a user-provided sent
 Run the script from the command line by providing a sentence:
 
 ```bash
-node scripts/analyze.js "I love this app"
+npm run analyze
 ```
+
+Enter a text
 
 Example output:
 
@@ -45,9 +47,7 @@ Neutral Score: 0.567
 If no input is provided, an error message will guide you:
 
 ```bash
-node scripts/analyze.js
 ❗ Please enter a sentence to analyze:
-Example: node scripts/analyze.js "I love this app"
 ```
 
 ## How It Works
